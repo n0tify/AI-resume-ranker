@@ -1,4 +1,3 @@
-# AI-resume-ranker
 # 🧠 Synapse: AI-Powered NLP Resume Ranker
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
@@ -8,6 +7,8 @@
 ![Render](https://img.shields.io/badge/Deployed_on-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)
 
 > **An enterprise-grade Application Tracking System (ATS) pipeline that mathematically ranks candidate dossiers against target job descriptions using advanced Natural Language Processing and TF-IDF vectorization.**
+
+### 🌐 **Live Demo: [ai-resume-ranker-n0m2.onrender.com](https://ai-resume-ranker-n0m2.onrender.com)**
 
 ---
 
@@ -64,7 +65,7 @@ To run this intelligence protocol on your local machine, follow these secure ste
 git clone [https://github.com/n0tify/AI-ML_Projects.git](https://github.com/n0tify/AI-ML_Projects.git)
 cd AI-ML_Projects/resume_ranker_project
 
-**2. Create a virtual environment
+2. Create a virtual environment
 
 python -m venv .venv
 source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
@@ -73,16 +74,18 @@ source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
 
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
+
 4. Configure Security Vault (.env)
 Create a .env file in the root directory and add your credentials:
 
-Code snippet
+Code snippet:
 FLASK_SECRET_KEY=your_secure_random_key
 ADMIN_EMAIL=your_email@gmail.com
 EMAIL_APP_PASSWORD=your_16_digit_app_password
 
 5. Initialize the Server
 
+Bash
 python app.py
 The dashboard will be live at http://127.0.0.1:5000
 
