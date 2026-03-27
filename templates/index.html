@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Synapse NLP Resume Screening Dashboard">
+    <title>Synapse | Intelligent Dossier Pipeline</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --text-main: #ffffff;
+            --text-light: #bae6fd;
+            --primary-grad: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+            --button-hover: linear-gradient(135deg, #0072ff 0%, #00c6ff 100%);
+            --aurora-1: #0284c7; --aurora-2: #059669; --aurora-3: #4f46e5;
+            --surface-bg: rgba(15, 23, 42, 0.65);
+            --border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0; padding: 60px 20px;
+            display: flex; justify-content: center; min-height: 100vh;
+            color: var(--text-main); background-color: #020617; overflow-x: hidden; position: relative;
+        }
+
+        .aurora-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; overflow: hidden; }
+        .blob { position: absolute; border-radius: 50%; filter: blur(130px); opacity: 0.45; animation: morphBlob 20s infinite alternate ease-in-out; }
+        .blob-1 { top: -20%; left: -10%; width: 65vw; height: 65vw; background-color: var(--aurora-1); }
+        .blob-2 { bottom: -10%; right: -10%; width: 55vw; height: 55vw; background-color: var(--aurora-2); animation-delay: -5s; }
+        .blob-3 { top: 40%; left: 30%; width: 45vw; height: 45vw; background-color: var(--aurora-3); animation-delay: -10s; }
+
+        @keyframes morphBlob {
+            0% { transform: translate(0px, 0px) scale(1); border-radius: 50%; }
+            33% { transform: translate(120px, 120px) scale(1.05); border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
+            66% { transform: translate(-60px, 150px) scale(0.95); border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+            100% { transform: translate(0px, 0px) scale(1); border-radius: 50%; }
+        }
+
+        .dashboard-container {
+            background: var(--surface-bg); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%);
+            width: 100%; max-width: 1200px; border-radius: 32px; border: 1px solid var(--border-color);
+            box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.9); padding: 70px; position: relative; z-index: 1;
+            animation: dashboardEntrance 1s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes dashboardEntrance { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: translateY(0); } }
+
+        .header-section { text-align: center; margin-bottom: 50px; }
+        .header-section h1 { margin: 0 0 10px 0; font-size: 4.5rem; font-weight: 800; background: var(--primary-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 25px rgba(0, 198, 255, 0.4)); }
+        .header-section p { color: var(--text-light); font-size: 1.2rem; letter-spacing: 0.15em; text-transform: uppercase; font-weight: 700; }
+
+        .alert-box { padding: 20px; border-radius: 16px; margin-bottom: 30px; font-weight: 700; animation: slideUpFade 0.5s ease; text-align: center; font-size: 1.1rem; }
+        .alert-danger { background: rgba(239, 68, 68, 0.15); color: #fecaca; border: 1px solid rgba(239,68,68,0.4); }
+        .alert-success { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.4); }
+
+        .form-group { margin-bottom: 35px; animation: slideUpFade 0.6s ease-out forwards; animation-delay: 0.2s; opacity: 0;}
+        label { display: block; font-weight: 800; margin-bottom: 14px; color: #f8fafc; letter-spacing: 0.03em; font-size: 1rem;}
+
+        textarea {
+            width: 100%; padding: 24px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px;
+            background: rgba(0, 0, 0, 0.5); color: white; font-family: inherit; font-size: 1.05rem; transition: all 0.3s ease;
+            height: 200px; resize: vertical; line-height: 1.6;
+        }
+        textarea:focus { border-color: rgba(0, 242, 254, 0.7); outline: none; box-shadow: 0 0 35px rgba(0, 242, 254, 0.25); background: rgba(0, 0, 0, 0.7); }
+
+        /* ADVANCED DRAG AND DROP ZONE */
+        .file-upload-wrapper {
+            height: 90px; border: 2px dashed rgba(255, 255, 255, 0.3); border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            background: rgba(255, 255, 255, 0.02); animation: slideUpFade 0.6s ease-out forwards; animation-delay: 0.3s; opacity: 0; transition: all 0.3s ease; position: relative;
+        }
+        .file-upload-wrapper.drag-over { border-color: #00c6ff; background: rgba(0, 198, 255, 0.1); transform: scale(1.02); }
+        .file-upload-wrapper:hover { border-color: #00c6ff; background: rgba(0, 198, 255, 0.06); }
+        .file-upload-wrapper input[type="file"] { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2; }
+        .file-upload-text { color: var(--text-light); font-weight: 700; font-size: 1.1rem; z-index: 1; transition: color 0.3s; pointer-events: none;}
+        .file-upload-wrapper:hover .file-upload-text { color: #ffffff; }
+
+        button.submit-btn {
+            background: var(--primary-grad); color: #000000; font-size: 1.3rem; font-weight: 800; letter-spacing: 0.05em;
+            border: none; border-radius: 20px; padding: 24px 40px; width: 100%; cursor: pointer; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 15px 35px -10px rgba(0, 242, 254, 0.7); margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 15px;
+            animation: slideUpFade 0.6s ease-out forwards; animation-delay: 0.4s; opacity: 0;
+        }
+        button.submit-btn:hover { transform: translateY(-6px); box-shadow: 0 25px 45px -10px rgba(0, 242, 254, 0.9); background: var(--button-hover); }
+
+        .spinner { display: none; width: 24px; height: 24px; border: 4px solid rgba(0,0,0,0.2); border-radius: 50%; border-top-color: #000000; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .results-section { margin-top: 80px; animation: slideUpFade 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .results-section h2 { font-size: 2.2rem; font-weight: 800; margin-bottom: 35px; color: white; letter-spacing: -0.03em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;}
+
+        .candidate-card { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 24px; padding: 35px; margin-bottom: 30px; display: grid; grid-template-columns: 1fr; gap: 25px; transition: all 0.4s ease; }
+        .candidate-card:hover { transform: translateY(-5px); border-color: rgba(0, 242, 254, 0.4); background: rgba(0, 0, 0, 0.6); box-shadow: 0 25px 50px -15px rgba(0,0,0,0.8); }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;}
+        .candidate-info h3 { margin: 0; font-size: 1.8rem; font-weight: 800; color: #ffffff;}
+        .candidate-info p { margin: 8px 0 0 0; color: var(--text-light); font-weight: 600;}
+        .score-number { font-size: 3.2rem; font-weight: 800; color: white; filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); margin: 0;}
+
+        .prob-tag { padding: 10px 20px; border-radius: 12px; font-weight: 800; font-size: 1rem; letter-spacing: 0.05em; display: inline-block; margin-bottom: 15px;}
+        .tag-green { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #34d399; box-shadow: 0 0 20px rgba(16,185,129,0.25); }
+        .tag-yellow { background: rgba(251, 191, 36, 0.2); color: #fcd34d; border: 1px solid #fcd34d; box-shadow: 0 0 20px rgba(251,191,36,0.25); }
+        .tag-red { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid #fca5a5; box-shadow: 0 0 20px rgba(239,68,68,0.25); }
+
+        .action-plan { background: rgba(255,255,255,0.03); padding: 28px; border-radius: 18px; border-left: 6px solid #00c6ff; margin-top: 15px;}
+        .action-plan h4 { margin: 0 0 15px 0; color: #00c6ff; font-size: 1.3rem;}
+        .action-plan p { margin: 0; font-size: 1.1rem; color: #e0f2fe; line-height: 1.8;}
+
+        .gap-tag { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); padding: 8px 18px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; display: inline-block; margin: 6px; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: default;}
+        .gap-tag:hover { transform: scale(1.1) rotate(-2deg); color: #ffffff; background: rgba(239, 68, 68, 0.5); box-shadow: 0 10px 20px -5px rgba(239, 68, 68, 0.6); border-color: #ef4444;}
+        .perfect-tag { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); padding: 8px 18px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; }
+
+        .rating-box { margin-top: 70px; background: rgba(12, 74, 110, 0.6); padding: 50px; border-radius: 28px; text-align: center; border: 1px solid rgba(0, 198, 255, 0.5); animation: slideUpFade 0.8s ease forwards; box-shadow: 0 25px 50px -15px rgba(0,0,0,0.6);}
+        .stars { display: flex; justify-content: center; gap: 15px; flex-direction: row-reverse; margin-bottom: 25px;}
+        .stars input { display: none; }
+        .stars label { font-size: 4.5rem; color: rgba(255,255,255,0.2); cursor: pointer; transition: all 0.2s; }
+        .stars input:checked ~ label, .stars label:hover, .stars label:hover ~ label { color: #fcd34d; text-shadow: 0 0 30px rgba(252, 211, 77, 0.9); transform: scale(1.15);}
+        
+        .feedback-input { width: 100%; height: 140px; background: rgba(0,0,0,0.5); border: 2px solid #0284c7; color: white; padding: 24px; border-radius: 20px; margin-bottom: 30px; font-family: inherit; font-size: 1.1rem;}
+        .feedback-input:focus { border-color: #00c6ff; outline: none; box-shadow: 0 0 25px rgba(0, 198, 255, 0.3); }
+        
+        .download-btn { display: inline-flex; align-items: center; justify-content: center; background: rgba(0, 198, 255, 0.1); color: #00c6ff; border: 2px solid #00c6ff; padding: 20px 38px; border-radius: 16px; font-weight: 800; text-decoration: none; margin-top: 35px; transition: all 0.3s ease; letter-spacing: 0.05em; font-size: 1.1rem; }
+        .download-btn:hover { background: #00c6ff; color: #000000; transform: translateY(-3px); box-shadow: 0 15px 25px -5px rgba(0, 198, 255, 0.5);}
+
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="aurora-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="header-section">
+            <h1>Synapse</h1>
+            <p>Zero-Trace NLP Intelligence Protocol</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert-box alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" enctype="multipart/form-data" id="analysisForm">
+            <div class="form-group">
+                <label>Target Vector (Job Description)</label>
+                <textarea name="job_description" placeholder="Initialize parameters: Paste the comprehensive job requirements, technical stacks, and core competencies..." required>{{ job_description if job_description else '' }}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Upload Candidate Corpus (PDF Batch)</label>
+                <div class="file-upload-wrapper" id="dropZone">
+                    <input type="file" name="resumes" id="fileInput" accept=".pdf" multiple required>
+                    <span class="file-upload-text" id="fileText">Drop dossier files here or click to browse...</span>
+                </div>
+            </div>
+            
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <span id="btnText">EXECUTE SECURE ANALYSIS</span>
+                <div class="spinner" id="btnSpinner"></div>
+            </button>
+        </form>
+
+        {% if rankings is not none %}
+            <div class="results-section">
+                <h2>Strategic Evaluation Matrix</h2>
+                
+                {% for rank in rankings %}
+                <div class="candidate-card">
+                    <div class="card-header">
+                        <div class="candidate-info">
+                            <h3>{{ rank['Candidate Name'] }}</h3>
+                            <p>{{ rank['Source File'] }}</p>
+                        </div>
+                        <div class="score-number">{{ rank['Match Score'] }}%</div>
+                    </div>
+
+                    <div>
+                        {% if rank['Match Score'] >= 75 %}
+                            <div class="prob-tag tag-green">🟢 ELITE MATCH - HIGH INTERVIEW PROBABILITY</div>
+                            <div class="action-plan">
+                                <h4>Strategic Action Plan:</h4>
+                                <p><strong>Exceptional Alignment.</strong> Your document demonstrates a masterful integration of the core competencies required for this role. The NLP engine detected profound semantic overlap between your experiences and the target vector. <strong>Next Steps:</strong> Do not bloat this resume further. Focus entirely on interview preparation. Ensure you have quantifiable metrics memorized for every technical skill listed. Prepare to aggressively defend your architectural decisions in technical rounds.</p>
+                            </div>
+                        {% elif rank['Match Score'] >= 40 %}
+                            <div class="prob-tag tag-yellow">🟡 COMPETITIVE MATCH - OPTIMIZATION REQUIRED</div>
+                            <div class="action-plan">
+                                <h4>Strategic Action Plan:</h4>
+                                <p><strong>Strong Foundation, but Missing Precision.</strong> You possess the foundational architecture needed for this role, but you are currently being penalized by Applicant Tracking Systems (ATS) for failing to use their exact corporate terminology. Your semantic vector is trailing the required job matrix. <strong>Next Steps:</strong> Immediately inject the critical missing keywords listed below into your recent work experiences or summary section. Do not just list them as isolated skills; contextualize them within a past project to beat advanced contextual ATS filters.</p>
+                            </div>
+                        {% else %}
+                            <div class="prob-tag tag-red">🔴 WEAK MATCH - MAJOR STRUCTURAL REVISION NEEDED</div>
+                            <div class="action-plan">
+                                <h4>Strategic Action Plan:</h4>
+                                <p><strong>Severe Vector Misalignment.</strong> Your current document is functionally invisible to the ATS for this specific role. The engine detected almost zero mathematical correlation between your projected skills and the client's demands. <strong>Next Steps:</strong> This requires a total structural teardown. You are likely applying to a role outside your primary domain, or you have failed to translate your academic/project work into industry-standard language. Review the missing keywords heavily. If you lack these skills entirely, pivot to a different job profile.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        {% if rank['Missing Keywords'] %}
+                            <div style="color: #38bdf8; font-weight: 800; margin-bottom: 12px; letter-spacing: 0.05em; font-size: 1.1rem;">CRITICAL GAPS DETECTED:</div>
+                            {% for word in rank['Missing Keywords'] %}
+                                <span class="gap-tag">{{ word }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="perfect-tag">✓ TOTAL KEYWORD SATURATION ACHIEVED</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div style="text-align: right;">
+                    <a href="{{ url_for('download_csv', session_id=session_id) }}" class="download-btn">
+                        Download Volatile Report (Self-Destructs After 1 Use)
+                    </a>
+                </div>
+            </div>
+            
+            <div class="rating-box" id="feedback-section">
+                <h2 style="color: white; margin-top: 0; font-size: 2.5rem; font-weight: 800;">Rate Your Synapse Experience</h2>
+                <p style="color: #bae6fd; font-weight: 600; font-size: 1.2rem; margin-bottom: 35px;">Your telemetry data helps us refine the AI. Feedback is transmitted securely to the engineering team.</p>
+                
+                <div class="stars">
+                    <input type="radio" id="star5" name="rate" value="5"><label for="star5" title="5 stars">★</label>
+                    <input type="radio" id="star4" name="rate" value="4"><label for="star4" title="4 stars">★</label>
+                    <input type="radio" id="star3" name="rate" value="3"><label for="star3" title="3 stars">★</label>
+                    <input type="radio" id="star2" name="rate" value="2"><label for="star2" title="2 stars">★</label>
+                    <input type="radio" id="star1" name="rate" value="1"><label for="star1" title="1 star">★</label>
+                </div>
+                
+                <textarea class="feedback-input" id="feedbackText" placeholder="Initialize feedback string here..."></textarea>
+                <button onclick="sendFeedback()" style="background: var(--primary-grad); color: #000; font-weight: 800; border: none; padding: 20px 45px; border-radius: 16px; cursor: pointer; font-size: 1.3rem; box-shadow: 0 15px 30px -5px rgba(0, 198, 255, 0.5); transition: all 0.3s; letter-spacing: 0.05em;">TRANSMIT SECURE FEEDBACK</button>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Advanced Drag and Drop Handling
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileText = document.getElementById('fileText');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            updateFileNameDisplay();
+        }
+
+        fileInput.addEventListener('change', updateFileNameDisplay);
+
+        function updateFileNameDisplay() {
+            if (fileInput.files.length === 1) {
+                fileText.textContent = "✓ " + fileInput.files[0].name;
+                fileText.style.color = "#ffffff";
+            } else if (fileInput.files.length > 1) {
+                fileText.textContent = "✓ " + fileInput.files.length + " dossiers loaded for batch analysis";
+                fileText.style.color = "#ffffff";
+            } else {
+                fileText.textContent = "Drop dossier files here or click to browse...";
+                fileText.style.color = "var(--text-light)";
+            }
+        }
+
+        // Form Submit Loading State
+        document.getElementById('analysisForm').addEventListener('submit', function() {
+            const btn = document.getElementById('submitBtn');
+            const text = document.getElementById('btnText');
+            const spinner = document.getElementById('btnSpinner');
+            
+            btn.style.opacity = '0.9';
+            btn.style.cursor = 'not-allowed';
+            btn.style.transform = 'scale(0.98)';
+            text.textContent = 'ANALYZING VECTORS...';
+            spinner.style.display = 'block';
+        });
+
+        // Async Feedback Transmission
+        function sendFeedback() {
+            let stars = document.querySelector('input[name="rate"]:checked');
+            let feedback = document.getElementById('feedbackText').value;
+            
+            if(!stars) { alert("Validation Error: Please select a star rating prior to transmission."); return; }
+
+            document.getElementById('feedback-section').style.opacity = '0.5';
+
+            fetch('/submit_feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stars: stars.value, feedback: feedback })
+            }).then(response => {
+                document.getElementById('feedback-section').style.opacity = '1';
+                if(response.ok) {
+                    document.getElementById('feedback-section').innerHTML = "<h3 style='color: #34d399; font-size: 2.5rem; margin-bottom: 10px;'>Transmission Successful!</h3><p style='color: #bae6fd; font-size: 1.3rem;'>Thank you for helping us optimize the Synapse architecture.</p>";
+                } else {
+                    throw new Error('Server returned an error.');
+                }
+            }).catch(error => {
+                document.getElementById('feedback-section').style.opacity = '1';
+                alert("Transmission Error: Verify SMTP Application Passwords and internet connectivity.");
+            });
+        }
+    </script>
+</body>
+</html>
